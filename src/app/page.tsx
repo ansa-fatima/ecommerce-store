@@ -18,7 +18,6 @@ import ProductSection from '@/components/ProductSection';
 import CategorySection from '@/components/CategorySection';
 import TrendingSection from '@/components/TrendingSection';
 import LoadingSpinner from '@/components/LoadingSpinner';
-import SmartChatBot from '@/components/SmartChatBot';
 import { Product } from '@/types';
 import { useData } from '@/contexts/DataContext';
 
@@ -26,7 +25,6 @@ export default function HomePage() {
   const { products, loading } = useData();
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
   const [bestsellers, setBestsellers] = useState<Product[]>([]);
-  const [chatbotKeywords, setChatbotKeywords] = useState<any[]>([]);
 
   useEffect(() => {
     // Filter products for featured and bestsellers
@@ -39,20 +37,6 @@ export default function HomePage() {
     const sortedByRating = [...activeProducts].sort((a, b) => b.rating - a.rating);
     setBestsellers(sortedByRating.slice(0, 4));
 
-    // Load chatbot keywords
-    const loadKeywords = async () => {
-      try {
-        const response = await fetch('/api/chatbot/keywords');
-        const data = await response.json();
-        if (data.success) {
-          setChatbotKeywords(data.data);
-        }
-      } catch (error) {
-        console.error('Error loading chatbot keywords:', error);
-      }
-    };
-    
-    loadKeywords();
   }, [products]);
 
 
@@ -66,7 +50,7 @@ export default function HomePage() {
           {/* Background Image */}
           <div className="absolute inset-0">
             <Image
-              src="/Hijab%20Girl%20%2316.jpg"
+              src="/Bg.jpg"
               alt="Hero Background"
               fill
               className="object-cover"
@@ -79,20 +63,17 @@ export default function HomePage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-24 relative z-10 h-full flex items-center">
             <div className="w-full text-center">
               <div className="space-y-6 lg:space-y-8">
-                <div className="space-y-3 lg:space-y-4">
-                  <h1 className="hero-title text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold leading-none whitespace-nowrap text-white drop-shadow-2xl">
+                <div className="space-y-3 lg:space-y-4 p-8 border-2 border-amber-200 border-opacity-30 rounded-2xl bg-black bg-opacity-20 backdrop-blur-sm">
+                  <h1 className="hero-title text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-medium leading-none whitespace-nowrap text-white drop-shadow-2xl" style={{ fontFamily: 'Roboto, sans-serif' }}>
                     Bloom Your Style
                   </h1>
                   <p className="text-lg sm:text-xl text-white leading-relaxed max-w-2xl mx-auto drop-shadow-lg">
                     Shop our unique collection of bracelets, earrings, and more, all made to elevate your style.
                   </p>
                 </div>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
+                <div className="flex justify-center mt-8">
                   <button className="bg-white text-gray-900 hover:bg-gray-100 px-8 py-4 rounded-full font-semibold transition-all duration-300 shadow-lg hover:shadow-xl">
                     Shop Now
-                  </button>
-                  <button className="border-2 border-white text-white hover:bg-white hover:text-gray-900 px-8 py-4 rounded-full font-semibold transition-all duration-300">
-                    Explore Collection
                   </button>
                 </div>
               </div>
@@ -181,14 +162,6 @@ export default function HomePage() {
       
       <Footer />
       
-      {/* Smart Chatbot */}
-      <SmartChatBot 
-        keywords={chatbotKeywords}
-        onNewChat={(chatData) => {
-          console.log('New chat started:', chatData);
-          // Here you could redirect to a contact page or open a support form
-        }}
-      />
     </div>
   );
 }

@@ -258,7 +258,7 @@ export default function SmartChatBot({ keywords = [], onNewChat }: SmartChatBotP
             </div>
             <button
               onClick={() => setIsOpen(false)}
-              className="text-white hover:text-gray-200"
+              className="text-white hover:text-gray-200 transition-colors"
             >
               <XMarkIcon className="h-5 w-5" />
             </button>

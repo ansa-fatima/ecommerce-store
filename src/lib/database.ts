@@ -5,18 +5,68 @@ import User, { IUser } from '@/models/User';
 import Category, { ICategory } from '@/models/Category';
 import ChatMessage, { IChatMessage } from '@/models/ChatMessage';
 
-// MongoDB connection function
+// Suppress Mongoose connection errors to prevent console spam
+mongoose.set('bufferCommands', false);
+
+// Global error handler to suppress repeated connection errors
+let lastErrorTime = 0;
+const ERROR_SUPPRESSION_DELAY = 10000; // 10 seconds
+
+mongoose.connection.on('error', (error) => {
+  const now = Date.now();
+  if (now - lastErrorTime > ERROR_SUPPRESSION_DELAY) {
+    console.warn('⚠️ Database connection issue - using fallback data');
+    lastErrorTime = now;
+  }
+});
+
+mongoose.connection.on('disconnected', () => {
+  const now = Date.now();
+  if (now - lastErrorTime > ERROR_SUPPRESSION_DELAY) {
+    console.warn('⚠️ Database disconnected - using fallback data');
+    lastErrorTime = now;
+  }
+});
+
+// MongoDB connection state tracking
+let connectionAttempted = false;
+let connectionFailed = false;
+let lastConnectionAttempt = 0;
+const CONNECTION_RETRY_DELAY = 30000; // 30 seconds
+
+// MongoDB connection function with error suppression
 async function dbConnect() {
-  if (mongoose.connections[0].readyState) {
+  // Check if MongoDB URI is configured
+  if (!process.env.MONGODB_URI) {
+    throw new Error('Database connection failed - using fallback data');
+  }
+
+  // If already connected, return
+  if (mongoose.connections[0].readyState === 1) {
     return;
   }
-  
+
+  // If connection failed recently, don't retry immediately
+  if (connectionFailed && Date.now() - lastConnectionAttempt < CONNECTION_RETRY_DELAY) {
+    throw new Error('Database connection failed - using fallback data');
+  }
+
+  connectionAttempted = true;
+  lastConnectionAttempt = Date.now();
+
   try {
-    await mongoose.connect(process.env.MONGODB_URI!);
-    console.log('Connected to MongoDB');
+    await mongoose.connect(process.env.MONGODB_URI, {
+      serverSelectionTimeoutMS: 5000, // 5 second timeout
+      connectTimeoutMS: 10000, // 10 second timeout
+      maxPoolSize: 1, // Limit connection pool
+    });
+    console.log('✅ Connected to MongoDB');
+    connectionFailed = false;
   } catch (error) {
-    console.error('MongoDB connection error:', error);
-    throw error;
+    connectionFailed = true;
+    console.warn('⚠️ MongoDB connection failed - using fallback data');
+    console.warn('Error details:', error);
+    throw new Error('Database connection failed - using fallback data');
   }
 }
 

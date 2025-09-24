@@ -30,7 +30,7 @@ export default function Logo({ className = '', showText = true, size = 'md' }: L
       <div className={`${imageSizeClasses[size]} relative rounded-full overflow-hidden`}>
         <Image
           src="/logo-1.png"
-          alt="AZH Collection Logo"
+          alt="Store Logo"
           fill
           className="object-cover"
           priority
@@ -41,7 +41,7 @@ export default function Logo({ className = '', showText = true, size = 'md' }: L
       {showText && (
         <div className="ml-3">
           <h1 className={`font-bold text-gray-900 ${textSizeClasses[size]}`}>
-            AZH Collection
+            Store
           </h1>
         </div>
       )}

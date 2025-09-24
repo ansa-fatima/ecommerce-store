@@ -35,11 +35,11 @@ export default function ProductModal({ isOpen, onClose, onSave, product, categor
   const [formData, setFormData] = useState<Omit<Product, '_id'>>({
     name: '',
     description: '',
-    price: 0,
-    originalPrice: 0,
+    price: undefined as any,
+    originalPrice: undefined as any,
     images: [],
     category: '',
-    stock: 0,
+    stock: undefined as any,
     isFeatured: false,
     isActive: true,
   });
@@ -177,7 +177,7 @@ export default function ProductModal({ isOpen, onClose, onSave, product, categor
               <input
                 type="number"
                 name="price"
-                value={formData.price}
+                value={formData.price || ''}
                 onChange={handleInputChange}
                 required
                 min="0"
@@ -194,7 +194,7 @@ export default function ProductModal({ isOpen, onClose, onSave, product, categor
               <input
                 type="number"
                 name="originalPrice"
-                value={formData.originalPrice}
+                value={formData.originalPrice || ''}
                 onChange={handleInputChange}
                 min="0"
                 step="0.01"
@@ -210,7 +210,7 @@ export default function ProductModal({ isOpen, onClose, onSave, product, categor
               <input
                 type="number"
                 name="stock"
-                value={formData.stock}
+                value={formData.stock || ''}
                 onChange={handleInputChange}
                 required
                 min="0"

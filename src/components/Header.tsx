@@ -55,6 +55,7 @@ export default function Header() {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     if (searchQuery.trim()) {
       router.push(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
       setIsSearchOpen(false);
@@ -62,13 +63,18 @@ export default function Header() {
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     logout();
     router.push('/');
   };
 
   const handleChangePassword = (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     if (passwordData.newPassword !== passwordData.confirmPassword) {
       alert('New passwords do not match');
       return;
@@ -83,7 +89,11 @@ export default function Header() {
     setShowChangePassword(false);
   };
 
-  const closeMobileMenu = () => {
+  const closeMobileMenu = (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     setIsMenuOpen(false);
     setIsShopDropdownOpen(false);
   };
@@ -106,7 +116,7 @@ export default function Header() {
             <nav className="hidden lg:flex items-center space-x-6">
               <Link 
                 href="/" 
-                className={`px-4 py-2 text-sm font-semibold transition-all duration-300 border-b-2 ${
+                className={`nav-link px-4 py-2 text-sm font-semibold transition-all duration-300 border-b-2 ${
                   isActiveTab('/') 
                     ? 'text-indigo-600 border-indigo-600' 
                     : 'text-gray-700 border-transparent hover:border-black'
@@ -117,7 +127,7 @@ export default function Header() {
                   <div className="relative group">
                     <Link 
                       href="/products" 
-                      className={`px-4 py-2 text-sm font-semibold transition-all duration-300 flex items-center border-b-2 ${
+                      className={`nav-link px-4 py-2 text-sm font-semibold transition-all duration-300 flex items-center border-b-2 ${
                         isActiveTab('/products') 
                           ? 'text-indigo-600 border-indigo-600' 
                           : 'text-gray-700 border-transparent hover:border-black'
@@ -150,7 +160,7 @@ export default function Header() {
                   </div>
                      <Link
                        href="/about"
-                       className={`px-4 py-2 text-sm font-semibold transition-all duration-300 border-b-2 ${
+                       className={`nav-link px-4 py-2 text-sm font-semibold transition-all duration-300 border-b-2 ${
                          isActiveTab('/about')
                            ? 'text-gray-900 border-gray-900'
                            : 'link-primary border-transparent'
@@ -160,7 +170,7 @@ export default function Header() {
                      </Link>
                      <Link 
                        href={isAdmin ? "/admin" : "/admin-login"}
-                       className={`px-4 py-2 text-sm font-semibold transition-all duration-300 border-b-2 ${
+                       className={`nav-link px-4 py-2 text-sm font-semibold transition-all duration-300 border-b-2 ${
                          isActiveTab('/admin') || isActiveTab('/admin-login')
                            ? 'text-gray-900 border-gray-900' 
                            : 'link-primary border-transparent'
@@ -179,8 +189,12 @@ export default function Header() {
             <div className="flex items-center space-x-2 sm:space-x-4">
               {/* Search Icon */}
               <button
-                onClick={() => setIsSearchOpen(!isSearchOpen)}
-                className="text-gray-600 p-2 rounded-full hover:bg-gray-100 transition-colors"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setIsSearchOpen(!isSearchOpen);
+                }}
+                className="nav-button text-gray-600 p-2 rounded-full hover:bg-gray-100 transition-colors"
               >
                 <MagnifyingGlassIcon className="h-5 w-5" />
               </button>
@@ -202,8 +216,12 @@ export default function Header() {
               {isAuthenticated ? (
                 <div className="relative">
                   <button
-                    onClick={() => setIsProfileOpen(!isProfileOpen)}
-                    className="flex items-center space-x-1 sm:space-x-2 text-gray-700 p-2 rounded-full hover:bg-gray-100 transition-colors"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setIsProfileOpen(!isProfileOpen);
+                    }}
+                    className="nav-button flex items-center space-x-1 sm:space-x-2 text-gray-700 p-2 rounded-full hover:bg-gray-100 transition-colors"
                   >
                     <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-r from-pink-400 to-purple-500 flex items-center justify-center">
                       <span className="text-white font-semibold text-xs sm:text-sm">
@@ -254,8 +272,12 @@ export default function Header() {
 
               {/* Mobile menu button */}
               <button
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="lg:hidden text-gray-600 hover:text-gray-900 transition-colors p-2 rounded-full hover:bg-gray-100"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setIsMenuOpen(!isMenuOpen);
+                }}
+                className="nav-button lg:hidden text-gray-600 hover:text-gray-900 transition-colors p-2 rounded-full hover:bg-gray-100"
               >
                 {isMenuOpen ? (
                   <XMarkIcon className="h-6 w-6" />
@@ -295,7 +317,7 @@ export default function Header() {
             <div className="px-4 pt-6 pb-8 space-y-1">
               <Link
                 href="/"
-                className={`block px-4 py-3 text-base font-semibold rounded-lg transition-colors ${
+                className={`nav-link block px-4 py-3 text-base font-semibold rounded-lg transition-colors ${
                   isActiveTab('/') 
                     ? 'text-indigo-600 bg-indigo-50' 
                     : 'text-gray-700 hover:text-gray-900 hover:bg-gray-50'
@@ -307,8 +329,12 @@ export default function Header() {
               
               <div className="space-y-1">
                 <button
-                  onClick={() => setIsShopDropdownOpen(!isShopDropdownOpen)}
-                  className={`w-full flex items-center justify-between px-4 py-3 text-base font-semibold rounded-lg transition-colors ${
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setIsShopDropdownOpen(!isShopDropdownOpen);
+                  }}
+                  className={`nav-button w-full flex items-center justify-between px-4 py-3 text-base font-semibold rounded-lg transition-colors ${
                     isActiveTab('/products') 
                       ? 'text-indigo-600 bg-indigo-50' 
                       : 'text-gray-700 hover:text-gray-900 hover:bg-gray-50'

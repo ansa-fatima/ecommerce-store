@@ -217,8 +217,8 @@ export default function AdminCategories() {
 
   // Sort categories
   const sortedCategories = [...filteredCategories].sort((a, b) => {
-    const aValue = a[sortField];
-    const bValue = b[sortField];
+    const aValue = a[sortField] || '';
+    const bValue = b[sortField] || '';
     
     if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
     if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
@@ -387,7 +387,7 @@ export default function AdminCategories() {
                     height={200}
                     className="w-full h-48 object-cover rounded-t-lg"
                     onError={(e) => {
-                      (e.target as HTMLImageElement).src = '/placeholder-image.png';
+                      (e.target as HTMLImageElement).src = '/placeholder-image.svg';
                     }}
                   />
                 </div>
@@ -649,9 +649,10 @@ function CategoryModal({ isOpen, onClose, onSave, category }: CategoryModalProps
   };
 
   const handleImageChange = (images: string[]) => {
-    if (images.length > 0) {
-      setFormData(prev => ({ ...prev, image: images[0] }));
-    }
+    setFormData(prev => ({ 
+      ...prev, 
+      image: images.length > 0 ? images[0] : '' 
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -776,4 +777,5 @@ function CategoryModal({ isOpen, onClose, onSave, category }: CategoryModalProps
     </div>
   );
 }
+
 

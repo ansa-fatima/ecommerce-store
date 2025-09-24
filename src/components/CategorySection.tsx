@@ -62,15 +62,18 @@ export default function CategorySection() {
                       src={category.image}
                       alt={category.name}
                       fill
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = '/placeholder-image.svg';
+                      }}
                     />
                   </div>
                   
                   {/* Category Text */}
                   <div className="text-center">
-                    <h3 className="category-text">
+                    <h3 className="category-text text-gray-900 font-semibold text-sm">
                       {category.name}
                     </h3>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-gray-600 font-medium">
                       {category.productCount} items
                     </p>
                   </div>
@@ -103,20 +106,33 @@ export default function CategorySection() {
                   alt={category.name}
                   fill
                   className="object-cover transition-transform duration-500 group-hover:scale-110"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = '/placeholder-image.svg';
+                  }}
                 />
                 
                 {/* Overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 
-                {/* Content */}
+                {/* Content - Always Visible */}
                 <div className="absolute inset-0 flex flex-col justify-end p-4">
-                  <div className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
-                    <h3 className="text-white font-semibold text-lg mb-1">
+                  {/* Always visible text with dark background for readability */}
+                  <div className="bg-black/40 backdrop-blur-sm rounded-lg p-3 mb-2">
+                    <h3 className="text-white font-semibold text-lg mb-1 drop-shadow-lg">
                       {category.name}
                     </h3>
-                    <p className="text-white/80 text-sm">
+                    <p className="text-white/90 text-sm drop-shadow-lg">
                       {category.productCount} products
                     </p>
+                  </div>
+                  
+                  {/* Hover overlay for additional effect */}
+                  <div className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+                    <div className="bg-gradient-to-t from-black/60 to-transparent rounded-lg p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <p className="text-white/80 text-sm">
+                        Shop {category.name.toLowerCase()}
+                      </p>
+                    </div>
                   </div>
                   
                   {/* Arrow Icon */}

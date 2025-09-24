@@ -60,7 +60,7 @@ export default function ProductDetailPage() {
           originalPrice: mongoProduct.originalPrice,
           images: mongoProduct.images || [],
           category: mongoProduct.category?.name || 'Uncategorized',
-          brand: 'AZH Collection',
+          brand: 'Store Brand',
           stock: mongoProduct.stock,
           isActive: mongoProduct.isActive,
           rating: 4.5, // Default rating
@@ -132,7 +132,7 @@ export default function ProductDetailPage() {
         originalPrice: 149.99,
         images: ['/images/headphone1.jpg', '/images/headphone2.jpg'],
         category: 'Electronics',
-        brand: 'AZH Collection',
+        brand: 'Store Brand',
         stock: 50,
         isActive: true,
         rating: 4.5,

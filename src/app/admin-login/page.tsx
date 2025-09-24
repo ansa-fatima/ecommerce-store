@@ -90,7 +90,7 @@ export default function AdminLoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="appearance-none rounded-md relative block w-full pl-10 pr-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                  placeholder="admin@azhcollection.com"
+                  placeholder="admin@store.com"
                 />
               </div>
             </div>
@@ -168,7 +168,7 @@ export default function AdminLoginPage() {
         <div className="mt-8 p-4 bg-blue-50 rounded-md">
           <h3 className="text-sm font-medium text-blue-800 mb-2">Admin Credentials:</h3>
           <div className="text-sm text-blue-700">
-            <p><strong>Email:</strong> admin@azhcollection.com</p>
+            <p><strong>Email:</strong> admin@store.com</p>
             <p><strong>Password:</strong> admin123</p>
           </div>
         </div>

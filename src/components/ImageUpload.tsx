@@ -93,9 +93,11 @@ export default function ImageUpload({ images, onImagesChange, maxImages = 10 }: 
 
   return (
     <div className="space-y-4">
-      <label className="block text-sm font-medium text-gray-700">
-        Product Images ({images.length}/{maxImages})
-      </label>
+      {maxImages > 1 && (
+        <label className="block text-sm font-medium text-gray-700">
+          Product Images ({images.length}/{maxImages})
+        </label>
+      )}
       
       {/* Upload Area */}
       <div
@@ -158,8 +160,15 @@ export default function ImageUpload({ images, onImagesChange, maxImages = 10 }: 
                 />
                 <button
                   type="button"
-                  onClick={() => handleRemoveImage(index)}
-                  className="absolute top-2 right-2 bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-700"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleRemoveImage(index);
+                  }}
+                  className={`absolute top-2 right-2 bg-red-600 text-white rounded-full p-1 transition-opacity hover:bg-red-700 z-10 ${
+                    maxImages === 1 ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+                  }`}
+                  title="Remove image"
                 >
                   <TrashIcon className="h-4 w-4" />
                 </button>
@@ -172,17 +181,30 @@ export default function ImageUpload({ images, onImagesChange, maxImages = 10 }: 
         </div>
       )}
 
-      {/* Add URL Button */}
-      {images.length < maxImages && (
-        <button
-          type="button"
-          onClick={handleAddImageUrl}
-          className="flex items-center px-4 py-2 border border-gray-300 rounded-md text-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-        >
-          <PhotoIcon className="h-4 w-4 mr-2" />
-          Add Image URL
-        </button>
-      )}
+      {/* Action Buttons */}
+      <div className="flex space-x-2">
+        {images.length < maxImages && (
+          <button
+            type="button"
+            onClick={handleAddImageUrl}
+            className="flex items-center px-4 py-2 border border-gray-300 rounded-md text-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          >
+            <PhotoIcon className="h-4 w-4 mr-2" />
+            Add Image URL
+          </button>
+        )}
+        
+        {images.length > 0 && (
+          <button
+            type="button"
+            onClick={() => onImagesChange([])}
+            className="flex items-center px-4 py-2 border border-red-300 rounded-md text-sm text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+          >
+            <TrashIcon className="h-4 w-4 mr-2" />
+            Clear All Images
+          </button>
+        )}
+      </div>
 
       {/* Image Reorder Instructions */}
       {images.length > 1 && (
@@ -193,4 +215,7 @@ export default function ImageUpload({ images, onImagesChange, maxImages = 10 }: 
     </div>
   );
 }
+
+
+
 

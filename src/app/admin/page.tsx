@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
@@ -43,15 +43,21 @@ export default function AdminDashboard() {
     }
   }, [isAdmin, authLoading, router]);
 
-  const loadDashboardData = async () => {
+  const loadDashboardData = useCallback(async () => {
     setLoading(true);
     
     try {
-      // Fetch real data from APIs
+      // Add timeout to prevent hanging requests
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      
+      // Fetch real data from APIs with timeout
       const [productsRes, ordersRes] = await Promise.all([
-        fetch('/api/products'),
-        fetch('/api/orders')
+        fetch('/api/products', { signal: controller.signal }),
+        fetch('/api/orders', { signal: controller.signal })
       ]);
+      
+      clearTimeout(timeoutId);
       
       const productsData = await productsRes.json();
       const ordersData = await ordersRes.json();
@@ -65,26 +71,24 @@ export default function AdminDashboard() {
       const products = productsData.data || productsData || [];
       const orders = ordersData.data || ordersData || [];
       
-      console.log('Dashboard data loaded:', { products, orders });
-      
-      // Calculate stats
+      // Calculate stats efficiently
       const totalProducts = products.length || 0;
       const totalOrders = orders.length || 0;
       const totalRevenue = orders.reduce((sum: number, order: any) => sum + (order.total || 0), 0);
       
-      // Get recent orders (last 4)
+      // Get recent orders (last 4) - more efficient sorting
       const recentOrders = orders
-        .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        .sort((a: any, b: any) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
         .slice(0, 4)
         .map((order: any) => ({
           id: order._id,
           customer: order.customer?.name || 'Unknown Customer',
           amount: order.total || 0,
           status: order.status || 'pending',
-          date: new Date(order.createdAt).toLocaleDateString()
+          date: new Date(order.createdAt || Date.now()).toLocaleDateString()
         }));
       
-      // Get top products (most ordered)
+      // Get top products (most ordered) - more efficient
       const topProducts = products
         .sort((a: any, b: any) => (b.rating || 0) - (a.rating || 0))
         .slice(0, 4)
@@ -114,41 +118,152 @@ export default function AdminDashboard() {
         recentOrders: [],
         topProducts: []
       });
-      alert('Failed to load dashboard data. Showing sample data instead.');
+      // Only show alert for non-abort errors
+      if (error instanceof Error && error.name !== 'AbortError') {
+        console.warn('Failed to load dashboard data. Showing sample data instead.');
+      }
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     if (isAdmin) {
       loadDashboardData();
     }
-  }, [isAdmin]);
+  }, [isAdmin, loadDashboardData]);
 
-  // Auto-refresh dashboard data every 30 seconds
-  useEffect(() => {
-    if (!isAdmin) return;
+  // Removed auto-refresh to improve performance
+  // Users can manually refresh using the refresh button
 
-    const interval = setInterval(() => {
-      loadDashboardData();
-    }, 30000); // Refresh every 30 seconds
-
-    return () => clearInterval(interval);
-  }, [isAdmin]);
-
-  const formatPrice = (price: number) => {
+  const formatPrice = useCallback((price: number) => {
     return new Intl.NumberFormat('en-PK', {
       style: 'currency',
       currency: 'PKR',
     }).format(price);
-  };
+  }, []);
 
-  if (authLoading || loading) {
+  // Memoize stats to prevent unnecessary recalculations
+  const memoizedStats = useMemo(() => stats, [stats]);
+
+  // Memoize the stats grid to prevent re-renders
+  const statsGrid = useMemo(() => (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="bg-white overflow-hidden shadow-lg rounded-xl border border-gray-200 hover:shadow-xl transition-shadow duration-300">
+        <div className="p-6">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <ShoppingBagIcon className="h-8 w-8 text-indigo-600" />
+            </div>
+            <div className="ml-5 w-0 flex-1">
+              <dl>
+                <dt className="text-sm font-medium text-gray-500 truncate">Total Products</dt>
+                <dd className="text-lg font-medium text-gray-900">{memoizedStats.totalProducts}</dd>
+              </dl>
+            </div>
+          </div>
+        </div>
+        <div className="bg-gray-50 px-6 py-3">
+          <div className="text-sm">
+            <Link href="/admin/products" className="font-medium text-indigo-600 hover:text-indigo-500">
+              View all products
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white overflow-hidden shadow-lg rounded-xl border border-gray-200 hover:shadow-xl transition-shadow duration-300">
+        <div className="p-6">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <ChartBarIcon className="h-8 w-8 text-green-600" />
+            </div>
+            <div className="ml-5 w-0 flex-1">
+              <dl>
+                <dt className="text-sm font-medium text-gray-500 truncate">Total Orders</dt>
+                <dd className="text-lg font-medium text-gray-900">{memoizedStats.totalOrders}</dd>
+              </dl>
+            </div>
+          </div>
+        </div>
+        <div className="bg-gray-50 px-6 py-3">
+          <div className="text-sm">
+            <Link href="/admin/orders" className="font-medium text-green-600 hover:text-green-500">
+              View all orders
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white overflow-hidden shadow-lg rounded-xl border border-gray-200 hover:shadow-xl transition-shadow duration-300">
+        <div className="p-6">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <CurrencyDollarIcon className="h-8 w-8 text-yellow-600" />
+            </div>
+            <div className="ml-5 w-0 flex-1">
+              <dl>
+                <dt className="text-sm font-medium text-gray-500 truncate">Total Revenue</dt>
+                <dd className="text-lg font-medium text-gray-900">{formatPrice(memoizedStats.totalRevenue)}</dd>
+              </dl>
+            </div>
+          </div>
+        </div>
+        <div className="bg-gray-50 px-6 py-3">
+          <div className="text-sm">
+            <Link href="/admin/reports" className="font-medium text-yellow-600 hover:text-yellow-500">
+              View reports
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white overflow-hidden shadow-lg rounded-xl border border-gray-200 hover:shadow-xl transition-shadow duration-300">
+        <div className="p-6">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <UserGroupIcon className="h-8 w-8 text-purple-600" />
+            </div>
+            <div className="ml-5 w-0 flex-1">
+              <dl>
+                <dt className="text-sm font-medium text-gray-500 truncate">Total Users</dt>
+                <dd className="text-lg font-medium text-gray-900">{memoizedStats.totalUsers}</dd>
+              </dl>
+            </div>
+          </div>
+        </div>
+        <div className="bg-gray-50 px-6 py-3">
+          <div className="text-sm">
+            <Link href="/admin/customers" className="font-medium text-purple-600 hover:text-purple-500">
+              View all customers
+            </Link>
+          </div>
+        </div>
+      </div>
+    </div>
+  ), [memoizedStats, formatPrice]);
+
+  if (authLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
+          <p className="text-gray-600">Authenticating...</p>
+        </div>
       </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <AdminLayout title="Dashboard">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading dashboard data...</p>
+          </div>
+        </div>
+      </AdminLayout>
     );
   }
 
@@ -159,6 +274,24 @@ export default function AdminDashboard() {
   return (
     <AdminLayout title="Dashboard">
       <div className="space-y-8">
+        {/* Error Boundary for API failures */}
+        {stats.totalProducts === 0 && stats.totalOrders === 0 && !loading && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-yellow-800">Data Loading Issue</h3>
+                <div className="mt-2 text-sm text-yellow-700">
+                  <p>Unable to load real-time data. Showing sample data instead. Click refresh to try again.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
         {/* Header */}
         <div className="bg-gradient-to-r from-white to-gray-50 rounded-xl shadow-sm p-8 border border-gray-200">
           <div className="flex items-center justify-between">
@@ -186,99 +319,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="bg-white overflow-hidden shadow-lg rounded-xl border border-gray-200 hover:shadow-xl transition-shadow duration-300">
-            <div className="p-6">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <ShoppingBagIcon className="h-8 w-8 text-indigo-600" />
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">Total Products</dt>
-                    <dd className="text-lg font-medium text-gray-900">{stats.totalProducts}</dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
-            <div className="bg-gray-50 px-6 py-3">
-              <div className="text-sm">
-                <Link href="/admin/products" className="font-medium text-indigo-600 hover:text-indigo-500">
-                  View all products
-                </Link>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white overflow-hidden shadow-lg rounded-xl border border-gray-200 hover:shadow-xl transition-shadow duration-300">
-            <div className="p-6">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <ChartBarIcon className="h-8 w-8 text-green-600" />
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">Total Orders</dt>
-                    <dd className="text-lg font-medium text-gray-900">{stats.totalOrders}</dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
-            <div className="bg-gray-50 px-6 py-3">
-              <div className="text-sm">
-                <Link href="/admin/orders" className="font-medium text-green-600 hover:text-green-500">
-                  View all orders
-                </Link>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white overflow-hidden shadow-lg rounded-xl border border-gray-200 hover:shadow-xl transition-shadow duration-300">
-            <div className="p-6">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <CurrencyDollarIcon className="h-8 w-8 text-yellow-600" />
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">Total Revenue</dt>
-                    <dd className="text-lg font-medium text-gray-900">{formatPrice(stats.totalRevenue)}</dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
-            <div className="bg-gray-50 px-6 py-3">
-              <div className="text-sm">
-                <Link href="/admin/reports" className="font-medium text-yellow-600 hover:text-yellow-500">
-                  View reports
-                </Link>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white overflow-hidden shadow-lg rounded-xl border border-gray-200 hover:shadow-xl transition-shadow duration-300">
-            <div className="p-6">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <UserGroupIcon className="h-8 w-8 text-purple-600" />
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">Total Users</dt>
-                    <dd className="text-lg font-medium text-gray-900">{stats.totalUsers}</dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
-            <div className="bg-gray-50 px-6 py-3">
-              <div className="text-sm">
-                <Link href="/admin/customers" className="font-medium text-purple-600 hover:text-purple-500">
-                  View all customers
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
+        {statsGrid}
 
         {/* Recent Orders and Top Products */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

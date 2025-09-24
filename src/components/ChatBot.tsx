@@ -213,17 +213,15 @@ export default function ChatBot({ className }: ChatBotProps) {
         </div>
       )}
 
-      {/* Chat Button */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="bg-ivory-600 text-ivory-900 p-4 rounded-full shadow-lg hover:bg-ivory-700 transition-all duration-200 hover:scale-105"
-      >
-        {isOpen ? (
-          <XMarkIcon className="h-6 w-6" />
-        ) : (
+      {/* Chat Button - Only show when closed */}
+      {!isOpen && (
+        <button
+          onClick={() => setIsOpen(true)}
+          className="bg-ivory-600 text-ivory-900 p-4 rounded-full shadow-lg hover:bg-ivory-700 transition-all duration-200 hover:scale-105"
+        >
           <ChatBubbleLeftRightIcon className="h-6 w-6" />
-        )}
-      </button>
+        </button>
+      )}
     </div>
   );
 }
