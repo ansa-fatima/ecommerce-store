@@ -25,6 +25,11 @@ export default function ProductCard({ product, className }: ProductCardProps) {
   const [isLoading, setIsLoading] = useState(false);
   const { addItem } = useCartStore();
 
+  // Debug: Log product colors
+  console.log('ProductCard - Product:', product.name);
+  console.log('ProductCard - Colors:', product.colors);
+  console.log('ProductCard - Has colors:', product.colors && product.colors.length > 0);
+
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -168,6 +173,29 @@ export default function ProductCard({ product, className }: ProductCardProps) {
             <span className="text-xs sm:text-sm text-gray-500 line-through">
               {formatPrice(product.originalPrice)}
             </span>
+          )}
+        </div>
+
+        {/* Colors */}
+        <div className="mt-2 mb-2">
+          {product.colors && product.colors.length > 0 ? (
+            <div className="flex flex-wrap gap-1">
+              {product.colors.slice(0, 3).map((color, index) => (
+                <div
+                  key={index}
+                  className="w-4 h-4 rounded-full border border-gray-300 flex-shrink-0"
+                  style={{ backgroundColor: color.startsWith('#') ? color : undefined }}
+                  title={color}
+                />
+              ))}
+              {product.colors.length > 3 && (
+                <div className="w-4 h-4 rounded-full border border-gray-300 bg-gray-100 flex items-center justify-center">
+                  <span className="text-xs text-gray-500">+{product.colors.length - 3}</span>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="text-xs text-gray-400">No colors available</div>
           )}
         </div>
 

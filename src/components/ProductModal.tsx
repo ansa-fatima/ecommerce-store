@@ -42,21 +42,32 @@ export default function ProductModal({ isOpen, onClose, onSave, product, categor
     stock: undefined as any,
     isFeatured: false,
     isActive: true,
+    colors: [],
   });
   const [loading, setLoading] = useState(false);
+  const [colorInput, setColorInput] = useState('');
 
   useEffect(() => {
     if (product) {
+      // Handle both string and object category types
+      let categoryId = '';
+      if (typeof product.category === 'string') {
+        categoryId = product.category;
+      } else if (typeof product.category === 'object' && product.category !== null) {
+        categoryId = product.category._id;
+      }
+      
       setFormData({
         name: product.name,
         description: product.description,
         price: product.price,
         originalPrice: product.originalPrice || 0,
         images: product.images,
-        category: product.category,
+        category: categoryId,
         stock: product.stock,
         isFeatured: product.isFeatured,
         isActive: product.isActive,
+        colors: product.colors || [],
       });
     } else {
       setFormData({
@@ -69,6 +80,7 @@ export default function ProductModal({ isOpen, onClose, onSave, product, categor
         stock: 0,
         isFeatured: false,
         isActive: true,
+        colors: [],
       });
     }
   }, [product, isOpen]);
@@ -85,9 +97,37 @@ export default function ProductModal({ isOpen, onClose, onSave, product, categor
     setFormData(prev => ({ ...prev, images }));
   };
 
+  const handleAddColor = () => {
+    if (colorInput.trim() && !formData.colors?.includes(colorInput.trim())) {
+      setFormData(prev => ({
+        ...prev,
+        colors: [...(prev.colors || []), colorInput.trim()]
+      }));
+      setColorInput('');
+    }
+  };
+
+  const handleRemoveColor = (colorToRemove: string) => {
+    setFormData(prev => ({
+      ...prev,
+      colors: prev.colors?.filter(color => color !== colorToRemove) || []
+    }));
+  };
+
+  const handleColorKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleAddColor();
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    
+    // Debug: Log form data including colors
+    console.log('ProductModal - Submitting form data:', formData);
+    console.log('ProductModal - Colors:', formData.colors);
     
     try {
       await onSave(formData);
@@ -217,6 +257,59 @@ export default function ProductModal({ isOpen, onClose, onSave, product, categor
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 placeholder="0"
               />
+            </div>
+          </div>
+
+          {/* Colors Section */}
+          <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              🎨 Available Colors
+            </label>
+            <div className="space-y-3">
+              {/* Color Input */}
+              <div className="flex space-x-2">
+                <input
+                  type="text"
+                  value={colorInput}
+                  onChange={(e) => setColorInput(e.target.value)}
+                  onKeyPress={handleColorKeyPress}
+                  placeholder="Enter color name or code (e.g., Red, #FF0000)"
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                />
+                <button
+                  type="button"
+                  onClick={handleAddColor}
+                  className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  Add Color
+                </button>
+              </div>
+              
+              {/* Color Tags */}
+              {formData.colors && formData.colors.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {formData.colors.map((color, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center space-x-2 bg-gray-100 rounded-full px-3 py-1 text-sm"
+                    >
+                      <div
+                        className="w-4 h-4 rounded-full border border-gray-300"
+                        style={{ backgroundColor: color.startsWith('#') ? color : undefined }}
+                        title={color}
+                      />
+                      <span>{color}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveColor(color)}
+                        className="text-gray-500 hover:text-red-600"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 

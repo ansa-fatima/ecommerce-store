@@ -73,28 +73,48 @@ async function dbConnect() {
 // --- Product Service ---
 export const ProductService = {
   async getAllProducts(): Promise<IProduct[]> {
-    await dbConnect();
-    return Product.find({ isActive: true }).populate('category').sort({ createdAt: -1 });
+    try {
+      await dbConnect();
+      return Product.find({ isActive: true }).populate('category').sort({ createdAt: -1 });
+    } catch (error) {
+      console.log('Database connection failed, returning empty array');
+      return [];
+    }
   },
 
   async getProductById(id: string): Promise<IProduct | null> {
-    await dbConnect();
-    if (!mongoose.Types.ObjectId.isValid(id)) return null;
-    return Product.findById(id).populate('category');
+    try {
+      await dbConnect();
+      if (!mongoose.Types.ObjectId.isValid(id)) return null;
+      return Product.findById(id).populate('category');
+    } catch (error) {
+      console.log('Database connection failed for getProductById');
+      return null;
+    }
   },
 
   async getProductsByCategory(categoryId: string): Promise<IProduct[]> {
-    await dbConnect();
-    if (!mongoose.Types.ObjectId.isValid(categoryId)) return [];
-    return Product.find({ category: categoryId, isActive: true }).populate('category').sort({ createdAt: -1 });
+    try {
+      await dbConnect();
+      if (!mongoose.Types.ObjectId.isValid(categoryId)) return [];
+      return Product.find({ category: categoryId, isActive: true }).populate('category').sort({ createdAt: -1 });
+    } catch (error) {
+      console.log('Database connection failed for getProductsByCategory');
+      return [];
+    }
   },
 
   async searchProducts(query: string): Promise<IProduct[]> {
-    await dbConnect();
-    return Product.find({
-      name: { $regex: query, $options: 'i' },
-      isActive: true,
-    }).populate('category').sort({ createdAt: -1 });
+    try {
+      await dbConnect();
+      return Product.find({
+        name: { $regex: query, $options: 'i' },
+        isActive: true,
+      }).populate('category').sort({ createdAt: -1 });
+    } catch (error) {
+      console.log('Database connection failed for searchProducts');
+      return [];
+    }
   },
 
   async createProduct(productData: Partial<IProduct>): Promise<IProduct> {
@@ -182,8 +202,13 @@ export const UserService = {
 // --- Category Service ---
 export const CategoryService = {
   async getAllCategories(): Promise<ICategory[]> {
-    await dbConnect();
-    return Category.find({ isActive: true }).sort({ name: 1 });
+    try {
+      await dbConnect();
+      return Category.find({ isActive: true }).sort({ name: 1 });
+    } catch (error) {
+      console.log('Database connection failed for getAllCategories');
+      return [];
+    }
   },
 
   async getCategoryById(id: string): Promise<ICategory | null> {

@@ -50,6 +50,7 @@ export async function GET(request: NextRequest) {
         stock: 25,
         isFeatured: true,
         isActive: true,
+        colors: ['Gold', '#FFD700', 'Rose Gold'],
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       },
@@ -63,6 +64,7 @@ export async function GET(request: NextRequest) {
         stock: 15,
         isFeatured: false,
         isActive: true,
+        colors: ['Silver', '#C0C0C0', 'White Gold'],
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       },
@@ -76,6 +78,7 @@ export async function GET(request: NextRequest) {
         stock: 8,
         isFeatured: true,
         isActive: true,
+        colors: ['White', '#F5F5DC', 'Cream'],
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       },
@@ -90,6 +93,7 @@ export async function GET(request: NextRequest) {
         stock: 3,
         isFeatured: true,
         isActive: true,
+        colors: ['White Gold', '#FFD700', 'Platinum'],
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       }

@@ -314,6 +314,30 @@ export default function ProductDetailPage() {
                   </div>
                 )}
               </div>
+
+              {/* Color Selection */}
+              {product.colors && product.colors.length > 0 && (
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-secondary-700 mb-3">
+                    Available Colors
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {product.colors.map((color, index) => (
+                      <button
+                        key={index}
+                        className="flex items-center space-x-2 px-3 py-2 border border-secondary-300 rounded-lg hover:border-primary-600 hover:bg-primary-50 transition-colors"
+                      >
+                        <div
+                          className="w-4 h-4 rounded-full border border-secondary-300"
+                          style={{ backgroundColor: color.startsWith('#') ? color : undefined }}
+                          title={color}
+                        />
+                        <span className="text-sm text-secondary-700">{color}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Quantity and Add to Cart */}

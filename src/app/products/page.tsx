@@ -49,15 +49,23 @@ export default function ProductsPage() {
   // Memoize filtered and sorted products for better performance
   const sortedProducts = useMemo(() => {
     const filteredProducts = products.filter(product => {
-      const isActive = product.isActive === true;
-      const matchesSearch = product.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
-                           product.description.toLowerCase().includes(debouncedSearchTerm.toLowerCase());
+      // Basic active check - be more lenient
+      const isActive = product.isActive !== false; // Allow undefined to pass through
+      
+      // Search filter
+      const matchesSearch = !debouncedSearchTerm || 
+        product.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+        product.description.toLowerCase().includes(debouncedSearchTerm.toLowerCase());
+      
+      // Category filter
       const matchesCategory = filterCategory === 'all' ||
         (typeof product.category === 'string' ? product.category : product.category?._id) === filterCategory;
-      const matchesBrand = brandFilter === 'all' || (product.brand && product.brand === brandFilter);
+      
+      // Brand filter
+      const matchesBrand = brandFilter === 'all' || !product.brand || product.brand === brandFilter;
       
       // Price range filter
-      const productPrice = product.price;
+      const productPrice = product.price || 0;
       const minPrice = priceRange.min ? parseFloat(priceRange.min) : 0;
       const maxPrice = priceRange.max ? parseFloat(priceRange.max) : Infinity;
       const matchesPrice = productPrice >= minPrice && productPrice <= maxPrice;
@@ -73,10 +81,26 @@ export default function ProductsPage() {
                                 (availabilityFilter === 'in-stock' && isInStock) ||
                                 (availabilityFilter === 'out-of-stock' && !isInStock);
       
-      return isActive && matchesSearch && matchesCategory && matchesBrand && 
+      const passes = isActive && matchesSearch && matchesCategory && matchesBrand && 
              matchesPrice && matchesRating && matchesAvailability;
+      
+      if (!passes) {
+        console.log('❌ Product filtered out:', product.name, {
+          isActive,
+          matchesSearch,
+          matchesCategory,
+          matchesBrand,
+          matchesPrice,
+          matchesRating,
+          matchesAvailability
+        });
+      }
+      
+      return passes;
     });
-
+    
+    console.log('✅ Filtered products:', filteredProducts.length);
+    
     // Sort products
     return filteredProducts.sort((a, b) => {
       let aValue: any, bValue: any;
@@ -524,6 +548,7 @@ export default function ProductsPage() {
           </div>
         </div>
 
+
         {/* Products Grid */}
         {loading || isRefreshing ? (
           <div className="text-center py-12">
@@ -532,8 +557,8 @@ export default function ProductsPage() {
           </div>
         ) : sortedProducts.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {sortedProducts.map((product) => (
-              <ProductCard key={product._id} product={product} />
+            {sortedProducts.map((product, index) => (
+              <ProductCard key={`${product._id}-${index}-${Date.now()}`} product={product} />
             ))}
           </div>
             ) : (

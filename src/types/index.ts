@@ -13,6 +13,7 @@ export interface Product {
   rating?: number;
   reviews?: Review[];
   tags?: string[];
+  colors?: string[];
   createdAt: Date;
   updatedAt: Date;
 }

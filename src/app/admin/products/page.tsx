@@ -23,7 +23,7 @@ interface Product {
   price: number;
   originalPrice?: number;
   images: string[];
-  category: string;
+  category: string | { _id: string; name: string; slug: string; description: string; image: string; isActive: boolean; createdAt: string; updatedAt: string; __v: number };
   stock: number;
   isFeatured: boolean;
   isActive: boolean;
@@ -78,6 +78,7 @@ export default function AdminProducts() {
       
       const productsData = await productsRes.json();
       const categoriesData = await categoriesRes.json();
+      
       
       setProducts(productsData.data || productsData || []);
       setCategories(categoriesData.data || categoriesData || []);
@@ -278,7 +279,16 @@ export default function AdminProducts() {
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          product.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = !selectedCategory || product.category === selectedCategory;
+    
+    // Handle both string and object category types for filtering
+    let categoryId = '';
+    if (typeof product.category === 'string') {
+      categoryId = product.category;
+    } else if (typeof product.category === 'object' && product.category !== null) {
+      categoryId = product.category._id;
+    }
+    
+    const matchesCategory = !selectedCategory || categoryId === selectedCategory;
     
     let matchesStock = true;
     if (stockFilter === 'in-stock') {
@@ -617,7 +627,21 @@ export default function AdminProducts() {
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {categories.find(c => c._id === product.category)?.name || 'Unknown'}
+                          {(() => {
+                            // Handle both string and object category types
+                            let categoryName = 'Unknown';
+                            
+                            if (typeof product.category === 'string') {
+                              // Category is a string ID
+                              const category = categories.find(c => c._id === product.category);
+                              categoryName = category?.name || product.category;
+                            } else if (typeof product.category === 'object' && product.category !== null) {
+                              // Category is an object
+                              categoryName = product.category.name || 'Unknown';
+                            }
+                            
+                            return categoryName;
+                          })()}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           <div>

@@ -32,7 +32,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
       
-      const response = await fetch('/api/products');
+      const response = await fetch(`/api/products?t=${Date.now()}`);
       console.log('📡 Response status:', response.status);
       console.log('📡 Response ok:', response.ok);
       
@@ -47,6 +47,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
       
       if (data.success && data.data) {
         console.log('📦 Setting products:', data.data.length, 'items');
+        console.log('📦 First product colors:', data.data[0]?.colors);
         setProducts(data.data);
         console.log('✅ Products set successfully');
       } else if (Array.isArray(data)) {
@@ -54,10 +55,17 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         console.log('📦 Setting products (array format):', data.length, 'items');
         setProducts(data);
         console.log('✅ Products set successfully (array format)');
+      } else if (data.data && Array.isArray(data.data)) {
+        // Handle case where API returns { data: [...] } format
+        console.log('📦 Setting products (data.data format):', data.data.length, 'items');
+        setProducts(data.data);
+        console.log('✅ Products set successfully (data.data format)');
       } else {
         console.warn('⚠️ Unexpected API response format:', data);
         console.warn('⚠️ Data type:', typeof data);
         console.warn('⚠️ Data keys:', Object.keys(data || {}));
+        // Set empty array as fallback
+        setProducts([]);
       }
     } catch (error) {
       console.error('❌ Error refreshing products:', error);
@@ -73,16 +81,28 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         // Convert MongoDB categories to frontend format
         const frontendCategories = data.data
           .filter((cat: any) => cat.isActive) // Only show active categories on store
-          .map((cat: any) => ({
-            _id: cat._id,
-            id: cat._id,
-            name: cat.name,
-            description: cat.description,
-            image: cat.image,
-            href: `/products?category=${cat.slug}`,
-            isActive: cat.isActive,
-            productCount: cat.productCount || 0
-          }));
+          .map((cat: any) => {
+            // Calculate actual product count for this category
+            const categoryProducts = products.filter(product => {
+              if (typeof product.category === 'string') {
+                return product.category === cat._id;
+              } else if (typeof product.category === 'object' && product.category !== null) {
+                return product.category._id === cat._id;
+              }
+              return false;
+            });
+            
+            return {
+              _id: cat._id,
+              id: cat._id,
+              name: cat.name,
+              description: cat.description,
+              image: cat.image,
+              href: `/products?category=${cat._id}`,
+              isActive: cat.isActive,
+              productCount: categoryProducts.length
+            };
+          });
         setCategories(frontendCategories);
         console.log('🔄 Categories refreshed for customer side:', frontendCategories.length, 'active categories');
       }
@@ -96,7 +116,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
           name: 'Bracelets',
           description: 'Beautiful bracelets for every occasion',
           image: '/image-6.jpg',
-          href: '/products?category=bracelets',
+          href: '/products?category=1',
           isActive: true,
           productCount: 45
         },
@@ -106,7 +126,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
           name: 'Earrings',
           description: 'Elegant earrings to complete your look',
           image: '/image-5.jpg',
-          href: '/products?category=earrings',
+          href: '/products?category=2',
           isActive: true,
           productCount: 68
         },
@@ -116,7 +136,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
           name: 'Necklaces',
           description: 'Stunning necklaces for special moments',
           image: '/image-4.jpg',
-          href: '/products?category=necklaces',
+          href: '/products?category=3',
           isActive: true,
           productCount: 52
         },
@@ -126,7 +146,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
           name: 'Keychains',
           description: 'Cute keychains and accessories',
           image: '/image-3.jpg',
-          href: '/products?category=keychains',
+          href: '/products?category=4',
           isActive: true,
           productCount: 32
         }
@@ -159,6 +179,13 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     const interval = setInterval(loadData, 10000);
     return () => clearInterval(interval);
   }, []);
+
+  // Refresh categories when products change to update counts
+  useEffect(() => {
+    if (products.length > 0) {
+      refreshCategories();
+    }
+  }, [products]);
 
   return (
     <DataContext.Provider value={{ 
